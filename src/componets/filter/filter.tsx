@@ -1,5 +1,6 @@
-import React, { BaseSyntheticEvent } from 'react';
+import React, { BaseSyntheticEvent, useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { debounce } from 'throttle-debounce';
 
 type Props = {
     value: string;
@@ -25,17 +26,33 @@ const WrappedInput = styled.input`
     }
 `;
 
-const Filter: React.FC<Props> = ({ value, onChange }) => (
-    <WrappedHeader>
-        <WrappedInput
-            type="text"
-            placeholder="enter query"
-            value={value}
-            onChange={(evt: BaseSyntheticEvent) => {
-                onChange(evt.target.value);
-            }}
-        />
-    </WrappedHeader>
-);
+const Filter: React.FC<Props> = ({ value, onChange }) => {
+    const [query, setQuery] = useState(value);
+
+    const handleChange = debounce(300, false, () => {
+        onChange(query);
+    });
+
+    useEffect(() => {
+        handleChange();
+
+        return () => {
+            handleChange.cancel();
+        };
+    }, [query]);
+
+    return (
+        <WrappedHeader>
+            <WrappedInput
+                type="text"
+                placeholder="enter query"
+                value={query}
+                onChange={(evt: BaseSyntheticEvent) => {
+                    setQuery(evt.target.value);
+                }}
+            />
+        </WrappedHeader>
+    );
+};
 
 export { Filter };
